@@ -1,19 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>GPS Debug</title>
+  <title>GPS to Laptop</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: sans-serif; padding: 1em; background: #f0f0f0; }
-    #log { font-size: 1.2em; background: white; padding: 1em; border-radius: 8px; }
+    body { font-family: sans-serif; padding: 1em; background: #f4f4f4; }
+    #log { background: #fff; padding: 1em; border-radius: 8px; }
   </style>
 </head>
 <body>
-  <h2>📍 GPS Debug</h2>
-  <div id="log">Waiting for GPS...</div>
+  <h2>📡 Sending GPS to Laptop</h2>
+  <div id="log">Connecting...</div>
 
   <script>
-    function updateLog(pos) {
+    const serverAddress = "ws://192.168.1.100:5050"; // ⬅️ Replace with your laptop’s IP!
+    const ws = new WebSocket(serverAddress);
+
+    ws.onopen = () => log("✅ WebSocket connected.");
+    ws.onerror = (e) => log("❌ WebSocket error.");
+    ws.onclose = () => log("🔌 WebSocket closed.");
+
+    function log(msg) {
+      document.getElementById("log").innerHTML = msg;
+    }
+
+    function update(pos) {
       const c = pos.coords;
       const lat = c.latitude.toFixed(6);
       const lon = c.longitude.toFixed(6);
@@ -21,19 +32,28 @@
       const spd = c.speed !== null ? c.speed.toFixed(2) + " m/s" : "N/A";
       const kmh = c.speed !== null ? (c.speed * 3.6).toFixed(2) + " km/h" : "N/A";
 
-      document.getElementById("log").innerHTML = `
-        <b>Latitude:</b> ${lat}<br>
-        <b>Longitude:</b> ${lon}<br>
-        <b>Accuracy:</b> ±${acc} m<br>
-        <b>Speed:</b> ${spd} (${kmh})
-      `;
+      const message = JSON.stringify({
+        lat: c.latitude,
+        lon: c.longitude,
+        accuracy: c.accuracy,
+        speed_kmh: c.speed !== null ? (c.speed * 3.6) : null
+      });
+
+      log(`<b>Lat:</b> ${lat}<br>
+           <b>Lon:</b> ${lon}<br>
+           <b>Accuracy:</b> ±${acc} m<br>
+           <b>Speed:</b> ${spd} (${kmh})`);
+
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(message);
+      }
     }
 
-    function showError(err) {
-      document.getElementById("log").innerText = "Error: " + err.message;
+    function error(err) {
+      log("⚠️ Geolocation error: " + err.message);
     }
 
-    navigator.geolocation.watchPosition(updateLog, showError, {
+    navigator.geolocation.watchPosition(update, error, {
       enableHighAccuracy: true,
       maximumAge: 1000,
       timeout: 10000
