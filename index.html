@@ -1,1 +1,43 @@
-Hello World!
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GPS Debug</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; padding: 1em; background: #f0f0f0; }
+    #log { font-size: 1.2em; background: white; padding: 1em; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h2>📍 GPS Debug</h2>
+  <div id="log">Waiting for GPS...</div>
+
+  <script>
+    function updateLog(pos) {
+      const c = pos.coords;
+      const lat = c.latitude.toFixed(6);
+      const lon = c.longitude.toFixed(6);
+      const acc = c.accuracy.toFixed(1);
+      const spd = c.speed !== null ? c.speed.toFixed(2) + " m/s" : "N/A";
+      const kmh = c.speed !== null ? (c.speed * 3.6).toFixed(2) + " km/h" : "N/A";
+
+      document.getElementById("log").innerHTML = `
+        <b>Latitude:</b> ${lat}<br>
+        <b>Longitude:</b> ${lon}<br>
+        <b>Accuracy:</b> ±${acc} m<br>
+        <b>Speed:</b> ${spd} (${kmh})
+      `;
+    }
+
+    function showError(err) {
+      document.getElementById("log").innerText = "Error: " + err.message;
+    }
+
+    navigator.geolocation.watchPosition(updateLog, showError, {
+      enableHighAccuracy: true,
+      maximumAge: 1000,
+      timeout: 10000
+    });
+  </script>
+</body>
+</html>
