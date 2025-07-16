@@ -13,7 +13,7 @@
   <div id="log">Connecting...</div>
 
   <script>
-    const serverAddress = "ws://172.20.10.2:5050"; // ⬅️ Replace with your laptop’s IP!
+    const serverAddress = "ws://192.168.1.100:5050"; // ⬅️ Replace with your laptop’s IP!
     const ws = new WebSocket(serverAddress);
 
     ws.onopen = () => log("✅ WebSocket connected.");
